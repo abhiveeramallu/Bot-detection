@@ -7,6 +7,8 @@ const acceptedRateEl = document.getElementById("accepted-rate");
 const rejectedRateEl = document.getElementById("rejected-rate");
 const acceptedBarEl = document.getElementById("accepted-bar");
 const rejectedBarEl = document.getElementById("rejected-bar");
+const exportBtn = document.getElementById("export-logs");
+initializeExport();
 
 fetch("/api/logs")
   .then((res) => res.json())
@@ -55,6 +57,35 @@ fetch("/api/logs")
     statsEl.textContent = "Failed to load logs.";
     console.error(error);
   });
+
+function initializeExport() {
+  if (!exportBtn) return;
+  exportBtn.addEventListener("click", async () => {
+    // Export supports compliance transparency without mutating detection data.
+    exportBtn.disabled = true;
+    try {
+      const response = await fetch("/admin/export-logs");
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      const fileDate = new Date().toISOString().slice(0, 10);
+      anchor.href = url;
+      anchor.download = `bot-detection-audit-${fileDate}.csv`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      statsEl.textContent = "Export failed. Please try again.";
+    } finally {
+      exportBtn.disabled = false;
+    }
+  });
+}
 
 function buildCell(value, className) {
   const cell = document.createElement("td");
