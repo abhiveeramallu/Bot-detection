@@ -34,26 +34,10 @@ async function run() {
 
   await wait(400);
 
-  const handle = await page.$("#captcha-handle");
-  const track = await page.$("#captcha-track");
-  const handleBox = await handle.boundingBox();
-  const trackBox = await track.boundingBox();
-
-  const startX = handleBox.x + handleBox.width / 2;
-  const startY = handleBox.y + handleBox.height / 2;
-  const endX = trackBox.x + trackBox.width - handleBox.width / 2 - 6;
-
-  await page.mouse.move(startX, startY);
-  await page.mouse.down();
-
-  const steps = 12;
-  for (let i = 1; i <= steps; i += 1) {
-    const nextX = startX + ((endX - startX) * i) / steps;
-    await page.mouse.move(nextX, startY);
-    await wait(50);
-  }
-
-  await page.mouse.up();
+  await page.waitForSelector("#captcha-prompt", { timeout: timeoutMs });
+  const prompt = await page.$eval("#captcha-prompt", (el) => el.textContent || "");
+  const answer = solveCaptchaPrompt(prompt);
+  await page.type("#captcha-answer", answer);
 
   await page.type("#username", "puppeteer_bot");
   await page.type("#password", "password123");
@@ -72,6 +56,20 @@ async function run() {
   console.log(`Puppeteer bot attempted login on ${targetUrl}.`);
 
   await browser.close();
+}
+
+function solveCaptchaPrompt(prompt) {
+  const text = String(prompt || "").trim();
+  const mathMatch = text.match(/What is\\s+(\\d+)\\s*\\+\\s*(\\d+)\\?/i);
+  if (mathMatch) {
+    return String(Number(mathMatch[1]) + Number(mathMatch[2]));
+  }
+  const colonIndex = text.indexOf(":");
+  if (colonIndex >= 0) {
+    return text.slice(colonIndex + 1).trim();
+  }
+  const parts = text.split(" ");
+  return parts[parts.length - 1] || "";
 }
 
 run().catch((error) => {

@@ -4,13 +4,12 @@ A demo-ready bot detection system that combines behavioral analysis, invisible t
 
 ## 🌟 Features
 
-- **🎯 Multi-Layer Detection**: Combines behavioral CAPTCHA, invisible traps, and automation heuristics
+- **🎯 Multi-Layer Detection**: Combines randomized CAPTCHA, invisible traps, and automation heuristics
 - **🤖 AI-Powered Scoring**: Machine learning-based risk assessment with configurable thresholds
 - **🎨 Professional UI**: Clean white/purple/black SaaS design with responsive layout
 - **📊 Admin Dashboard**: Real-time monitoring with detailed access logs and analytics
 - **🔒 Privacy-First**: Minimal fingerprinting, no external services required
 - **🛡️ Bot Simulation**: Built-in Selenium, Puppeteer, and Playwright attack scripts for testing
-- **⚡ Local Bot Runner**: One-click bot test (local demo) with live status feed
 
 ## 🏗️ Architecture Overview
 
@@ -97,6 +96,7 @@ npm run bot:all
 ```
 
 *Run these commands while the server is running to see real-time detection in action.*
+The bot scripts automatically solve the randomized CAPTCHA (word, math, or code).
 
 ### Target a Deployed URL
 Send the bots to a live deployment using `BOT_TARGET_URL`:
@@ -230,7 +230,6 @@ const CAPTCHA_THRESHOLD = 0.6;     // CAPTCHA anomaly threshold
 ```
 
 ### Environment Variables
-- `ALLOW_BOT_RUN=true` to enable the Run Bot Test button and `/api/run-bots` locally.
 - `BOT_TARGET_URL` to point bot scripts at a deployed site.
 - `BOT_TIMEOUT_MS` to increase bot wait time.
 - `BOT_HEADLESS=false` to run bots in visible mode.
@@ -238,7 +237,7 @@ const CAPTCHA_THRESHOLD = 0.6;     // CAPTCHA anomaly threshold
 
 ### Detection Features
 The AI scoring engine analyzes:
-- **CAPTCHA Metrics**: Drag duration, mouse speed variance, corrections, reaction time
+- **CAPTCHA Metrics**: Challenge type, time to solve, retries, and answer match
 - **Behavioral Signals**: Mouse movements, keystrokes, typing patterns
 - **Automation Flags**: WebDriver, headless UA, missing plugins/languages
 - **Trap Interactions**: Honeypot clicks, hidden field triggers
@@ -250,10 +249,9 @@ Every login attempt is logged to `storage/access_log.csv` with:
 ```csv
 timestamp,username,decision,label,reason,reasonSummary,aiScore,behaviorScore,automationScore,automationFlags,
 botDetectDecision,botSignalCount,botDetectFlags,webdriver,headlessUA,pluginsLength,languagesLength,captchaScore,
-captchaDragDurationMs,captchaMouseSpeedVariance,captchaCorrections,captchaReactionTimeMs,captchaHoneypotTriggered,
-captchaDragDistanceRatio,captchaActivationDelayMs,captchaEarlyAttempt,captchaVerifiedClient,trapClicked,
-timeToFirstClickMs,timeToSubmitMs,mouseMoveCount,keystrokeCount,typingDurationMs,typingCps,userAgent,platform,
-language,timezone
+captchaChallengeType,captchaTimeToSolveMs,captchaAttempts,captchaHoneypotTriggered,captchaActivationDelayMs,
+captchaVerifiedClient,trapClicked,timeToFirstClickMs,timeToSubmitMs,mouseMoveCount,keystrokeCount,
+typingDurationMs,typingCps,userAgent,platform,language,timezone
 ```
 
 **Note**: `storage/*.csv` files are git-ignored to protect user privacy.
@@ -280,16 +278,14 @@ Each bot script demonstrates different attack vectors:
 3. Run bot scripts (should be rejected)
 4. Monitor results in admin dashboard
 
-### One-click Bot Test (Local Demo)
-From the login page, click **Run Bot Test** to launch all bot scripts against the current site and populate the admin logs.
-This button is hidden in production unless `ALLOW_BOT_RUN=true` is set.
-The status panel under the button shows real-time progress from the server.
+### Bot Testing (Local + Deployed)
+Run bots from your local machine and target localhost or a deployed URL using `BOT_TARGET_URL`.
 
 ## ☁️ Vercel Deployment Notes
 - API routes are handled by `api/[...path].js`, so `/api/login` and `/api/logs` work on Vercel.
 - Logs are written to `/tmp/access_log.csv` in serverless environments (ephemeral). For persistence, set `LOG_PATH` or wire to external storage.
 - The UI in `public/` is served automatically by Vercel.
-- The local bot runner (`/api/run-bots`) is disabled on Vercel by default. Run bots from your local machine using `BOT_TARGET_URL` instead.
+- Run bots from your local machine using `BOT_TARGET_URL` to hit your deployed site.
 
 ## 🚀 Production Considerations
 

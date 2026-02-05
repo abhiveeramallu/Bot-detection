@@ -151,14 +151,11 @@ function buildFeatures({
     pluginsLength: automationSignals?.pluginsLength ?? null,
     languagesLength: automationSignals?.languagesLength ?? null,
     captchaScore: captcha?.score ?? null,
-    captchaDragDurationMs: captcha?.dragDurationMs ?? null,
-    captchaMouseSpeedVariance: captcha?.mouseSpeedVariance ?? null,
-    captchaCorrections: captcha?.numberOfCorrections ?? null,
-    captchaReactionTimeMs: captcha?.reactionTimeMs ?? null,
+    captchaChallengeType: captcha?.challengeType ?? null,
+    captchaTimeToSolveMs: captcha?.timeToSolveMs ?? null,
+    captchaAttempts: captcha?.attempts ?? null,
     captchaHoneypotTriggered: captcha?.honeypotTriggered ?? null,
-    captchaDragDistanceRatio: captcha?.dragDistanceRatio ?? null,
     captchaActivationDelayMs: captcha?.activationDelayMs ?? null,
-    captchaEarlyAttempt: captcha?.earlyAttempt ?? null,
     captchaVerifiedClient: captcha?.verified ?? null,
     trapClicked: Boolean(trapClicked),
     timeToFirstClickMs: timingMs?.timeToFirstClickMs ?? null,
@@ -175,13 +172,13 @@ module.exports = {
 };
 
 function scoreCaptcha(captcha = {}) {
-  // Server-side behavioral CAPTCHA scoring (not position-based).
+  // Server-side CAPTCHA scoring (randomized text challenge).
   let score = 0;
   const reasons = [];
 
-  const hasMetrics = typeof captcha.dragDurationMs === "number"
-    || typeof captcha.reactionTimeMs === "number"
-    || typeof captcha.mouseSpeedVariance === "number";
+  const hasMetrics = typeof captcha.timeToSolveMs === "number"
+    || typeof captcha.userAnswer === "string"
+    || typeof captcha.answer === "string";
 
   if (!hasMetrics) {
     return {
@@ -199,55 +196,31 @@ function scoreCaptcha(captcha = {}) {
     };
   }
 
-  if (captcha.earlyAttempt) {
-    score += 0.2;
-    reasons.push("captcha interacted before activation");
+  const answer = normalizeAnswer(captcha.answer);
+  const userAnswer = normalizeAnswer(captcha.userAnswer);
+
+  if (!captcha.verified) {
+    score += 0.7;
+    reasons.push("captcha not verified");
+  } else if (answer && userAnswer && answer !== userAnswer) {
+    score += 0.7;
+    reasons.push("captcha answer mismatch");
   }
 
-  if (typeof captcha.reactionTimeMs === "number") {
-    if (captcha.reactionTimeMs < 220) {
-      score += 0.35;
-      reasons.push(`reaction time too fast (${captcha.reactionTimeMs}ms)`);
-    }
-  }
-
-  if (typeof captcha.dragDurationMs === "number") {
-    if (captcha.dragDurationMs < 350) {
-      score += 0.4;
-      reasons.push(`drag too fast (${captcha.dragDurationMs}ms)`);
-    }
-    if (captcha.dragDurationMs > 6000) {
+  if (typeof captcha.timeToSolveMs === "number") {
+    if (captcha.timeToSolveMs < 400) {
       score += 0.25;
-      reasons.push(`drag too slow (${captcha.dragDurationMs}ms)`);
+      reasons.push(`captcha solved too fast (${captcha.timeToSolveMs}ms)`);
+    }
+    if (captcha.timeToSolveMs > 20000) {
+      score += 0.2;
+      reasons.push(`captcha solved too slow (${captcha.timeToSolveMs}ms)`);
     }
   }
 
-  const varianceLow = typeof captcha.mouseSpeedVariance === "number" && captcha.mouseSpeedVariance < 0.002;
-  const noCorrections = typeof captcha.numberOfCorrections === "number" && captcha.numberOfCorrections === 0;
-  const fastDrag = typeof captcha.dragDurationMs === "number" && captcha.dragDurationMs < 1200;
-
-  if (varianceLow && noCorrections && fastDrag) {
-    score += 0.6;
-    reasons.push(`robotic drag pattern (variance ${captcha.mouseSpeedVariance.toFixed(4)}, corrections 0)`);
-  } else {
-    if (varianceLow) {
-      score += 0.35;
-      reasons.push(`mouse speed variance very low (${captcha.mouseSpeedVariance.toFixed(4)})`);
-    }
-    if (noCorrections) {
-      score += 0.15;
-      reasons.push("no drag corrections detected");
-    }
-  }
-
-  if (typeof captcha.dragDistanceRatio === "number" && captcha.dragDistanceRatio < 0.45) {
-    score += 0.35;
-    reasons.push(`drag distance too short (${captcha.dragDistanceRatio})`);
-  }
-
-  if (captcha.verified === false) {
-    score += 0.1;
-    reasons.push("client verification not completed");
+  if (typeof captcha.attempts === "number" && captcha.attempts > 2) {
+    score += 0.2;
+    reasons.push(`captcha retries high (${captcha.attempts})`);
   }
 
   return {
@@ -260,14 +233,15 @@ function scoreCaptcha(captcha = {}) {
 function buildCaptchaFeatures(captcha, score) {
   return {
     score,
-    dragDurationMs: captcha.dragDurationMs ?? null,
-    mouseSpeedVariance: captcha.mouseSpeedVariance ?? null,
-    numberOfCorrections: captcha.numberOfCorrections ?? null,
-    reactionTimeMs: captcha.reactionTimeMs ?? null,
+    challengeType: captcha.type ?? null,
+    timeToSolveMs: captcha.timeToSolveMs ?? null,
+    attempts: captcha.attempts ?? null,
     honeypotTriggered: captcha.honeypotTriggered ?? null,
-    dragDistanceRatio: captcha.dragDistanceRatio ?? null,
     activationDelayMs: captcha.activationDelayMs ?? null,
-    earlyAttempt: captcha.earlyAttempt ?? null,
     verified: captcha.verified ?? null
   };
+}
+
+function normalizeAnswer(value) {
+  return String(value || "").trim().toLowerCase();
 }
