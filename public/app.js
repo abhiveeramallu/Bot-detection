@@ -452,6 +452,8 @@ function collectAutomationSignals() {
 function initBotRunner() {
   if (!runBotsBtn) return;
 
+  initializeBotRunnerUi();
+
   runBotsBtn.addEventListener("click", async () => {
     runBotsBtn.disabled = true;
     setStatus("Launching bot tests...", "", "Bots will attempt login shortly. Check admin logs.");
@@ -481,6 +483,33 @@ function initBotRunner() {
       runBotsBtn.disabled = false;
     }
   });
+}
+
+async function initializeBotRunnerUi() {
+  if (!runBotsBtn) return;
+  try {
+    const response = await fetch("/api/bot-status");
+    if (!response.ok) {
+      hideBotRunnerUi();
+      return;
+    }
+    const data = await response.json();
+    if (!data?.allowed) {
+      hideBotRunnerUi();
+    }
+  } catch (error) {
+    hideBotRunnerUi();
+  }
+}
+
+function hideBotRunnerUi() {
+  if (runBotsBtn) {
+    runBotsBtn.style.display = "none";
+  }
+  if (botLogEl) {
+    botLogEl.classList.remove("bot-log--visible");
+    botLogEl.style.display = "none";
+  }
 }
 
 function setStatus(message, stateClass, reason) {
@@ -519,6 +548,11 @@ async function pollBotStatus() {
       return;
     }
     const data = await response.json();
+    if (data?.allowed === false) {
+      hideBotRunnerUi();
+      stopBotLogPolling();
+      return;
+    }
     updateBotLog(data);
     if (data.status && data.status !== "running") {
       stopBotLogPolling();

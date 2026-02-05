@@ -228,7 +228,11 @@ app.post("/api/run-bots", (req, res) => {
 });
 
 app.get("/api/bot-status", (req, res) => {
+  const allowBotRun = process.env.ALLOW_BOT_RUN === "true"
+    || (!process.env.VERCEL && process.env.NODE_ENV !== "production");
+
   res.json({
+    allowed: allowBotRun,
     status: botRunState.status,
     startedAt: botRunState.startedAt,
     finishedAt: botRunState.finishedAt,
