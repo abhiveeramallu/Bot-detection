@@ -1,77 +1,289 @@
 # Bot Detection with AI
 
-A demo-ready, offline, localhost-only bot detection system with a clean, flat SaaS UI. It combines lightweight behavioral signals, invisible traps, and bot-detect integration to classify attempts while keeping human-facing feedback simple and non-technical.
+A sophisticated, localhost-only bot detection system that combines behavioral analysis, invisible traps, and AI-powered scoring to distinguish between human users and automated bots. This demo showcases a multi-layered security approach with a clean, professional SaaS interface.
 
-## Highlights
-- **Clean UI**: white/purple/black, flat, professional SaaS layout.
-- **Human-safe feedback**: clear success/rejection messages without exposing scores or detection logic.
-- **Layered verification**: behavioral CAPTCHA + traps + automation heuristics.
-- **Admin logging**: CSV logs with AI score, CAPTCHA score, behavior score, automation flags, and reason summaries.
-- **Admin dashboard**: accepted vs rejected counts, color-coded decisions, score bars.
+## 🌟 Features
 
-## Requirements
+- **🎯 Multi-Layer Detection**: Combines behavioral CAPTCHA, invisible traps, and automation heuristics
+- **🤖 AI-Powered Scoring**: Machine learning-based risk assessment with configurable thresholds
+- **🎨 Professional UI**: Clean white/purple/black SaaS design with responsive layout
+- **📊 Admin Dashboard**: Real-time monitoring with detailed access logs and analytics
+- **🔒 Privacy-First**: Minimal fingerprinting, localhost-only operation, no cloud dependencies
+- **🛡️ Bot Simulation**: Built-in Selenium, Puppeteer, and Playwright attack scripts for testing
+
+## 🏗️ Architecture Overview
+
+```mermaid
+graph TB
+    A[User Browser] --> B[Client Detection Layer]
+    B --> C[Behavioral Analysis]
+    B --> D[Invisible Traps]
+    B --> E[Bot-Detect Library]
+    
+    C --> F[Mouse Movement Tracking]
+    C --> G[Keystroke Dynamics]
+    C --> H[Timing Analysis]
+    
+    D --> I[Honeypot Fields]
+    D --> J[Hidden Elements]
+    
+    E --> K[Automation Detection]
+    E --> L[WebDriver Detection]
+    E --> M[Headless Browser Detection]
+    
+    F --> N[AI Scoring Engine]
+    G --> N
+    H --> N
+    I --> N
+    J --> N
+    K --> N
+    L --> N
+    M --> N
+    
+    N --> O[Decision Engine]
+    O --> P[Accept/Reject]
+    
+    P --> Q[Access Logs]
+    P --> R[User Feedback]
+    
+    Q --> S[Admin Dashboard]
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
 - **Node.js** 18+ and **npm** 9+
-- Optional (bot simulations):
-  - **Chromium/Chrome** installed
-  - **Playwright** browsers: `npx playwright install`
+- **Chromium/Chrome** (for bot simulations)
+- **Playwright browsers**: `npx playwright install` (optional)
 
-See `requirements.txt` for a short list.
+### Installation
 
-## Setup
-1. Install dependencies:
+1. **Clone and install dependencies**:
    ```bash
+   git clone https://github.com/abhiveeramallu/Bot-detection.git
+   cd Bot-detection
    npm install
    ```
-2. Verify `public/vendor/botdetect.min.js` exists. If you want to rebuild it, follow `public/vendor/README.md`.
-3. Start the server:
+
+2. **Verify bot-detect bundle**:
+   Ensure `public/vendor/botdetect.min.js` exists. If not, follow `public/vendor/README.md` to rebuild.
+
+3. **Start the server**:
    ```bash
    npm start
    ```
-4. Open:
-   - Login: `http://localhost:3000`
-   - Admin logs: `http://localhost:3000/admin.html`
 
-## Bot Attack Simulation
-Run any of the scripts below (server must be running):
+4. **Access the application**:
+   - **Login Page**: http://localhost:3000
+   - **Admin Dashboard**: http://localhost:3000/admin.html
+
+## 🎭 Bot Attack Simulation
+
+Test the detection system with automated attacks:
+
 ```bash
+# Selenium WebDriver attack
 npm run bot:selenium
+
+# Puppeteer-based attack
 npm run bot:puppeteer
+
+# Playwright-based attack
 npm run bot:playwright
 ```
 
-## Project Structure
+*Run these commands while the server is running to see real-time detection in action.*
+
+## 📁 Project Structure
+
+```mermaid
+graph LR
+    A[Root] --> B[bots/]
+    A --> C[public/]
+    A --> D[server/]
+    A --> E[storage/]
+    A --> F[vendor/]
+    
+    B --> B1[selenium.js]
+    B --> B2[puppeteer.js]
+    B --> B3[playwright.js]
+    
+    C --> C1[index.html]
+    C --> C2[admin.html]
+    C --> C3[app.js]
+    C --> C4[styles.css]
+    C --> C5[vendor/]
+    
+    D --> D1[index.js]
+    D --> D2[aiScoring.js]
+    D --> D3[logger.js]
+    
+    E --> E1[access_log.csv]
+    
+    F --> F1[bot-detect/]
 ```
-.
-├── bots/              # Selenium / Puppeteer / Playwright attack scripts
-├── public/            # Login UI + client detection logic
-│   ├── vendor/        # bot-detect bundle
-│   ├── admin.html     # Admin dashboard
-│   ├── admin.js       # Admin UI logic
-│   ├── app.js         # Client behavior + captcha + submit
-│   ├── index.html     # Login UI
-│   └── styles.css     # UI theme
-├── server/            # Express API, AI scoring, decision engine, logging
-├── storage/           # CSV access logs (ignored from git)
-├── package.json
-└── README.md
+
+### Directory Details
+
+- **`bots/`** - Automated attack scripts using popular automation frameworks
+- **`public/`** - Frontend assets including login UI, admin dashboard, and client-side detection
+- **`server/`** - Express.js backend with AI scoring, decision engine, and logging
+- **`storage/`** - CSV access logs (git-ignored for privacy)
+- **`vendor/`** - Third-party libraries including bot-detect
+
+## 🔍 Detection Pipeline
+
+```mermaid
+flowchart TD
+    A[Login Attempt] --> B[Client-Side Collection]
+    B --> C{Behavioral Analysis}
+    B --> D{Invisible Traps}
+    B --> E{Bot-Detect Scan}
+    
+    C --> C1[Mouse Patterns]
+    C --> C2[Typing Rhythm]
+    C --> C3[Timing Metrics]
+    
+    D --> D1[Honeypot Click]
+    D --> D2[Hidden Field]
+    D --> D3[Trap Interaction]
+    
+    E --> E1[WebDriver Check]
+    E --> E2[Headless Detection]
+    E --> E3[Automation Flags]
+    
+    C1 --> F[AI Scoring]
+    C2 --> F
+    C3 --> F
+    D1 --> F
+    D2 --> F
+    D3 --> F
+    E1 --> F
+    E2 --> F
+    E3 --> F
+    
+    F --> G{Risk Score >= 0.6?}
+    G -->|Yes| H[REJECTED]
+    G -->|No| I[ACCEPTED]
+    
+    H --> J[Log Attempt]
+    I --> J
+    J --> K[Update Dashboard]
 ```
 
-## Logging
-Every attempt is recorded in `storage/access_log.csv` with:
-- Decision + label
-- Reason summary (admin-only)
-- AI score, behavior score, CAPTCHA score
-- Automation flags and signal counts
-- Interaction metrics (timing, mouse, typing)
+## 📊 Detection Features
 
-`storage/*.csv` is ignored from git to avoid committing sensitive logs.
+### Behavioral Analysis
+- **Mouse Movement**: Track movement patterns, velocity, and natural vs robotic motion
+- **Keystroke Dynamics**: Analyze typing rhythm, speed variations, and pause patterns
+- **Timing Metrics**: Measure time to first click, form completion time, and interaction delays
 
-## Security & Privacy
-- Human-facing messages are **non-technical** and never expose thresholds or feature weights.
-- Internal scoring details are **admin-only** in logs.
-- No cloud services; localhost-only by default.
-- Minimal fingerprinting (UA, platform, language, timezone) to keep the demo privacy-friendly.
+### Invisible Traps
+- **Honeypot Fields**: Hidden form fields that bots typically fill
+- **Trap Elements**: Invisible buttons and links designed to catch automated interactions
+- **CSS Traps**: Elements positioned off-screen or with zero opacity
 
-## Notes
-This is a demo project and does not ship with admin authentication. For production, add access control to `/admin.html` and `/api/logs`.
-# Bot-detection
+### Automation Detection
+- **WebDriver Detection**: Identify Selenium, Puppeteer, and Playwright automation
+- **Headless Browser Flags**: Detect headless Chrome, Firefox, and WebKit
+- **Plugin/Language Checks**: Verify browser fingerprint authenticity
+
+### AI Scoring Engine
+- **Multi-Feature Analysis**: Combines all signals into a unified risk score
+- **Configurable Thresholds**: Adjustable sensitivity levels (default: 0.6)
+- **Reason Generation**: Human-readable explanations for detection decisions
+
+## 📈 Admin Dashboard Features
+
+- **Real-time Statistics**: Live counts of accepted vs rejected attempts
+- **Detailed Logs**: Comprehensive CSV export with all detection metrics
+- **Visual Analytics**: Color-coded decisions and score visualizations
+- **Filtering Options**: Sort by timestamp, decision, username, or risk factors
+
+## 🔧 Configuration
+
+### Thresholds
+```javascript
+const SCORE_THRESHOLD = 0.6;      // AI risk score threshold
+const CAPTCHA_THRESHOLD = 0.6;     // CAPTCHA anomaly threshold
+```
+
+### Detection Features
+The AI scoring engine analyzes:
+- **CAPTCHA Metrics**: Drag duration, mouse speed variance, corrections, reaction time
+- **Behavioral Signals**: Mouse movements, keystrokes, typing patterns
+- **Automation Flags**: WebDriver, headless UA, missing plugins/languages
+- **Trap Interactions**: Honeypot clicks, hidden field triggers
+
+## 📝 Logging Format
+
+Every login attempt is logged to `storage/access_log.csv` with:
+
+```csv
+timestamp,decision,label,reason,aiScore,captchaScore,behaviorScore,automationScore,
+automationFlags,botDetectDecision,botSignalCount,trapClicked,mouseMoveCount,
+keystrokeCount,typingDurationMs,userAgent,platform,language,timezone
+```
+
+**Note**: `storage/*.csv` files are git-ignored to protect user privacy.
+
+## 🛡️ Security & Privacy
+
+- **Human-Friendly Messages**: Non-technical feedback that doesn't expose detection logic
+- **Admin-Only Details**: Internal scoring and technical reasons restricted to logs
+- **Localhost Operation**: No cloud services or external API calls
+- **Minimal Fingerprinting**: Privacy-conscious data collection (UA, platform, language, timezone)
+- **No PII Storage**: Username sanitization and no personal information retention
+
+## 🧪 Testing & Development
+
+### Bot Simulation Scripts
+Each bot script demonstrates different attack vectors:
+- **Selenium**: Traditional WebDriver automation
+- **Puppeteer**: Headless Chrome automation
+- **Playwright**: Cross-browser automation framework
+
+### Manual Testing
+1. Start the server: `npm start`
+2. Open http://localhost:3000 in a regular browser (should be accepted)
+3. Run bot scripts (should be rejected)
+4. Monitor results in admin dashboard
+
+## 🚀 Production Considerations
+
+For production deployment, consider:
+- **Admin Authentication**: Add access control to `/admin.html` and `/api/logs`
+- **Rate Limiting**: Implement IP-based request throttling
+- **CSRF Protection**: Add anti-CSRF tokens for form submissions
+- **HTTPS**: Enable SSL/TLS for secure communication
+- **Database**: Replace CSV logging with proper database storage
+- **Scaling**: Consider load balancing for high-traffic scenarios
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Commit changes: `git commit -m 'Add feature description'`
+4. Push to branch: `git push origin feature-name`
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **[bot-detect](https://github.com/AudriusVaskevicius/bot-detect)** - JavaScript bot detection library
+- **Express.js** - Web framework for Node.js
+- **Playwright, Puppeteer, Selenium** - Browser automation frameworks (for testing)
+
+## 📞 Support
+
+For questions, issues, or contributions:
+- Create an issue on GitHub
+- Check the existing documentation
+- Review the bot simulation examples
+
+---
+
+**⚠️ Disclaimer**: This is a demo project for educational purposes. For production use, implement proper authentication, security hardening, and compliance measures.
