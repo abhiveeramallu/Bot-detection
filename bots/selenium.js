@@ -7,8 +7,12 @@ function resolveTargetUrl() {
 
 async function run() {
   const targetUrl = resolveTargetUrl();
+  const timeoutMs = Number(process.env.BOT_TIMEOUT_MS) || 45000;
+  const headless = process.env.BOT_HEADLESS === "false" ? false : true;
   const options = new chrome.Options();
-  options.addArguments("--headless=new");
+  if (headless) {
+    options.addArguments("--headless=new");
+  }
   options.addArguments("--disable-gpu");
   options.addArguments("--no-sandbox");
   options.addArguments("--window-size=1280,800");
@@ -20,13 +24,13 @@ async function run() {
 
   try {
     await driver.get(targetUrl);
-    await driver.wait(until.elementLocated(By.id("username")), 5000);
+    await driver.wait(until.elementLocated(By.id("username")), timeoutMs);
 
     await driver.wait(async () => {
       const captcha = await driver.findElement(By.id("captcha"));
       const className = await captcha.getAttribute("class");
       return !className.includes("captcha--inactive");
-    }, 5000);
+    }, timeoutMs);
 
     await driver.sleep(400);
 

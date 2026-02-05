@@ -1,5 +1,6 @@
 const path = require("path");
 const express = require("express");
+const { spawn } = require("child_process");
 
 const { scoreAttempt } = require("./aiScoring");
 const { appendLog, readLogs } = require("./logger");
@@ -7,6 +8,13 @@ const { appendLog, readLogs } = require("./logger");
 const app = express();
 const SCORE_THRESHOLD = 0.6;
 const CAPTCHA_THRESHOLD = 0.6;
+const botRunState = {
+  status: "idle",
+  startedAt: null,
+  finishedAt: null,
+  exitCode: null,
+  logs: []
+};
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.static(path.join(__dirname, "..", "public")));
@@ -156,6 +164,79 @@ app.get("/api/logs", (req, res) => {
   }
 });
 
+app.post("/api/run-bots", (req, res) => {
+  const allowBotRun = process.env.ALLOW_BOT_RUN === "true"
+    || (!process.env.VERCEL && process.env.NODE_ENV !== "production");
+
+  if (!allowBotRun) {
+    return res.status(403).json({
+      message: "Bot test disabled.",
+      reason: "Enable ALLOW_BOT_RUN=true for local demos."
+    });
+  }
+
+  if (botRunState.status === "running") {
+    return res.status(409).json({
+      message: "Bot test already running.",
+      reason: "Please wait for the current run to finish."
+    });
+  }
+
+  const baseUrl = buildBaseUrl(req);
+  const scriptPath = path.join(__dirname, "..", "bots", "run-all.js");
+  const env = {
+    ...process.env,
+    BOT_TARGET_URL: baseUrl,
+    BOT_TIMEOUT_MS: process.env.BOT_TIMEOUT_MS || "60000"
+  };
+
+  botRunState.status = "running";
+  botRunState.startedAt = new Date().toISOString();
+  botRunState.finishedAt = null;
+  botRunState.exitCode = null;
+  botRunState.logs = [`Bot run started for ${baseUrl}`];
+
+  const child = spawn(process.execPath, [scriptPath], {
+    env,
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+
+  child.stdout.on("data", (data) => {
+    const lines = String(data).split("\n").map((line) => line.trim()).filter(Boolean);
+    pushBotLogs(lines);
+    lines.forEach((line) => console.log(`[bot-runner] ${line}`));
+  });
+  child.stderr.on("data", (data) => {
+    const lines = String(data).split("\n").map((line) => line.trim()).filter(Boolean);
+    pushBotLogs(lines);
+    lines.forEach((line) => console.error(`[bot-runner] ${line}`));
+  });
+  child.on("close", (code) => {
+    botRunState.status = code === 0 ? "completed" : "failed";
+    botRunState.finishedAt = new Date().toISOString();
+    botRunState.exitCode = code;
+    pushBotLogs([`Bot run ${code === 0 ? "completed" : "failed"} (exit ${code}).`]);
+    if (code !== 0) {
+      console.error(`Bot run exited with code ${code}`);
+    }
+  });
+
+  return res.json({
+    message: "Bot test started.",
+    target: baseUrl
+  });
+});
+
+app.get("/api/bot-status", (req, res) => {
+  res.json({
+    status: botRunState.status,
+    startedAt: botRunState.startedAt,
+    finishedAt: botRunState.finishedAt,
+    exitCode: botRunState.exitCode,
+    logs: botRunState.logs
+  });
+});
+
 module.exports = app;
 
 function sanitizeUsername(username) {
@@ -292,6 +373,21 @@ function summarizeAutomationFlags({ botDetectDecision, botSignalCount, automatio
   if (automationSignals?.pluginsLength === 0) flags.push("no plugins");
   if (automationSignals?.languagesLength === 0) flags.push("no languages");
   return flags;
+}
+
+function buildBaseUrl(req) {
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  const proto = forwardedProto ? forwardedProto.split(",")[0] : req.protocol || "http";
+  const host = req.headers["x-forwarded-host"] || req.headers.host;
+  return `${proto}://${host}`;
+}
+
+function pushBotLogs(lines) {
+  if (!Array.isArray(lines)) return;
+  botRunState.logs.push(...lines);
+  if (botRunState.logs.length > 40) {
+    botRunState.logs = botRunState.logs.slice(-40);
+  }
 }
 
 function summarizeBotDetect(results) {

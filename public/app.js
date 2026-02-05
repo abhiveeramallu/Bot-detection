@@ -47,10 +47,16 @@ const captchaHandle = document.getElementById("captcha-handle");
 const captchaProgress = document.getElementById("captcha-progress");
 const captchaStatus = document.getElementById("captcha-status");
 const captchaHp = document.getElementById("captcha-hp");
+const runBotsBtn = document.getElementById("run-bots");
+const botLogEl = document.getElementById("bot-log");
+const botLogStatusEl = document.getElementById("bot-log-status");
+const botLogLinesEl = document.getElementById("bot-log-lines");
+let botLogTimer = null;
 
 initBotDetect();
 initBehaviorTracking();
 initCaptcha();
+initBotRunner();
 
 formEl.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -443,6 +449,40 @@ function collectAutomationSignals() {
   };
 }
 
+function initBotRunner() {
+  if (!runBotsBtn) return;
+
+  runBotsBtn.addEventListener("click", async () => {
+    runBotsBtn.disabled = true;
+    setStatus("Launching bot tests...", "", "Bots will attempt login shortly. Check admin logs.");
+    startBotLogPolling();
+
+    try {
+      const response = await fetch("/api/run-bots", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: "ui" })
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const message = result?.message || "Bot test could not start.";
+        const reason = result?.reason || "This action may be disabled in production.";
+        setStatus(message, "danger", reason);
+        stopBotLogPolling();
+      } else {
+        setStatus("Bot tests started.", "success", "They should appear in admin logs within a few seconds.");
+      }
+    } catch (error) {
+      setStatus("Bot test failed to start.", "danger", "Please check the server logs.");
+      console.error(error);
+      stopBotLogPolling();
+    } finally {
+      runBotsBtn.disabled = false;
+    }
+  });
+}
+
 function setStatus(message, stateClass, reason) {
   if (statusMessageEl) {
     statusMessageEl.textContent = message || "";
@@ -453,6 +493,63 @@ function setStatus(message, stateClass, reason) {
   const modifier = stateClass ? `status--${stateClass}` : "";
   const visible = message || reason ? "status--visible" : "";
   statusEl.className = `status ${modifier} ${visible}`.trim();
+}
+
+function startBotLogPolling() {
+  if (!botLogEl || !botLogStatusEl || !botLogLinesEl) return;
+  botLogEl.classList.add("bot-log--visible");
+  if (botLogTimer) clearInterval(botLogTimer);
+  pollBotStatus();
+  botLogTimer = window.setInterval(pollBotStatus, 1200);
+}
+
+function stopBotLogPolling() {
+  if (botLogTimer) {
+    clearInterval(botLogTimer);
+    botLogTimer = null;
+  }
+}
+
+async function pollBotStatus() {
+  try {
+    const response = await fetch("/api/bot-status");
+    if (!response.ok) {
+      updateBotLog({ status: "unavailable", logs: ["Bot status unavailable."] });
+      stopBotLogPolling();
+      return;
+    }
+    const data = await response.json();
+    updateBotLog(data);
+    if (data.status && data.status !== "running") {
+      stopBotLogPolling();
+    }
+  } catch (error) {
+    updateBotLog({ status: "error", logs: ["Unable to load bot status."] });
+    stopBotLogPolling();
+  }
+}
+
+function updateBotLog(data) {
+  if (!botLogEl || !botLogStatusEl || !botLogLinesEl) return;
+  const status = data?.status || "idle";
+  botLogStatusEl.textContent = formatBotStatus(status);
+  const lines = Array.isArray(data?.logs) ? data.logs : [];
+  botLogLinesEl.innerHTML = "";
+  lines.slice(-6).forEach((line) => {
+    const entry = document.createElement("div");
+    entry.className = "bot-log__line";
+    entry.textContent = line;
+    botLogLinesEl.appendChild(entry);
+  });
+}
+
+function formatBotStatus(status) {
+  if (status === "running") return "Running bot tests...";
+  if (status === "completed") return "Bot tests completed.";
+  if (status === "failed") return "Bot tests failed.";
+  if (status === "unavailable") return "Bot status unavailable.";
+  if (status === "error") return "Bot status error.";
+  return "Idle";
 }
 
 function triggerHaptic(type) {

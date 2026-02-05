@@ -8,7 +8,8 @@
     "start": "node server/index.js",
     "bot:selenium": "node bots/selenium.js",
     "bot:puppeteer": "node bots/puppeteer.js",
-    "bot:playwright": "node bots/playwright.js"
+    "bot:playwright": "node bots/playwright.js",
+    "bot:all": "node bots/run-all.js"
   },
   "dependencies": {
     "express": "^4.19.2"
