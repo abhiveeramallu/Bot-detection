@@ -2,14 +2,19 @@ const puppeteer = require("puppeteer");
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function resolveTargetUrl() {
+  return process.env.BOT_TARGET_URL || "http://localhost:3000";
+}
+
 async function run() {
+  const targetUrl = resolveTargetUrl();
   const browser = await puppeteer.launch({
     headless: "new",
     args: ["--no-sandbox", "--disable-setuid-sandbox"]
   });
 
   const page = await browser.newPage();
-  await page.goto("http://localhost:3000", { waitUntil: "networkidle0" });
+  await page.goto(targetUrl, { waitUntil: "networkidle0" });
 
   await page.waitForFunction(() => {
     const captcha = document.getElementById("captcha");
@@ -53,7 +58,7 @@ async function run() {
   } else {
     await wait(1500);
   }
-  console.log("Puppeteer bot attempted login.");
+  console.log(`Puppeteer bot attempted login on ${targetUrl}.`);
 
   await browser.close();
 }

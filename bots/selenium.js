@@ -1,7 +1,12 @@
 const { Builder, By, until } = require("selenium-webdriver");
 const chrome = require("selenium-webdriver/chrome");
 
+function resolveTargetUrl() {
+  return process.env.BOT_TARGET_URL || "http://localhost:3000";
+}
+
 async function run() {
+  const targetUrl = resolveTargetUrl();
   const options = new chrome.Options();
   options.addArguments("--headless=new");
   options.addArguments("--disable-gpu");
@@ -14,7 +19,7 @@ async function run() {
     .build();
 
   try {
-    await driver.get("http://localhost:3000");
+    await driver.get(targetUrl);
     await driver.wait(until.elementLocated(By.id("username")), 5000);
 
     await driver.wait(async () => {
@@ -73,7 +78,7 @@ async function run() {
     });
 
     await driver.sleep(1500);
-    console.log("Selenium bot attempted login.");
+    console.log(`Selenium bot attempted login on ${targetUrl}.`);
   } finally {
     await driver.quit();
   }

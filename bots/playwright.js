@@ -1,10 +1,15 @@
 const { chromium } = require("playwright");
 
+function resolveTargetUrl() {
+  return process.env.BOT_TARGET_URL || "http://localhost:3000";
+}
+
 async function run() {
+  const targetUrl = resolveTargetUrl();
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
-  await page.goto("http://localhost:3000", { waitUntil: "networkidle" });
+  await page.goto(targetUrl, { waitUntil: "networkidle" });
 
   await page.waitForFunction(() => {
     const captcha = document.getElementById("captcha");
@@ -43,7 +48,7 @@ async function run() {
   });
 
   await page.waitForTimeout(1500);
-  console.log("Playwright bot attempted login.");
+  console.log(`Playwright bot attempted login on ${targetUrl}.`);
 
   await browser.close();
 }
