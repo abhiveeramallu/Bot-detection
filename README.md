@@ -1,6 +1,6 @@
 # Bot Detection with AI
 
-A sophisticated, localhost-only bot detection system that combines behavioral analysis, invisible traps, and AI-powered scoring to distinguish between human users and automated bots. This demo showcases a multi-layered security approach with a clean, professional SaaS interface.
+A demo-ready bot detection system that combines behavioral analysis, invisible traps, and AI-powered scoring to distinguish between human users and automated bots. It runs locally for demos and can be deployed on serverless platforms like Vercel, while keeping human-facing feedback simple and non-technical.
 
 ## 🌟 Features
 
@@ -8,8 +8,9 @@ A sophisticated, localhost-only bot detection system that combines behavioral an
 - **🤖 AI-Powered Scoring**: Machine learning-based risk assessment with configurable thresholds
 - **🎨 Professional UI**: Clean white/purple/black SaaS design with responsive layout
 - **📊 Admin Dashboard**: Real-time monitoring with detailed access logs and analytics
-- **🔒 Privacy-First**: Minimal fingerprinting, localhost-only operation, no cloud dependencies
+- **🔒 Privacy-First**: Minimal fingerprinting, no external services required
 - **🛡️ Bot Simulation**: Built-in Selenium, Puppeteer, and Playwright attack scripts for testing
+- **⚡ Local Bot Runner**: One-click bot test (local demo) with live status feed
 
 ## 🏗️ Architecture Overview
 
@@ -90,9 +91,23 @@ npm run bot:puppeteer
 
 # Playwright-based attack
 npm run bot:playwright
+
+# Run all bots in sequence
+npm run bot:all
 ```
 
 *Run these commands while the server is running to see real-time detection in action.*
+
+### Target a Deployed URL
+Send the bots to a live deployment using `BOT_TARGET_URL`:
+
+```bash
+BOT_TARGET_URL="https://your-project.vercel.app" npm run bot:all
+```
+
+Optional tuning:
+- `BOT_TIMEOUT_MS=60000` to increase wait time
+- `BOT_HEADLESS=false` to watch the bots run visually
 
 ## 📁 Project Structure
 
@@ -103,10 +118,12 @@ graph LR
     A --> D[server/]
     A --> E[storage/]
     A --> F[vendor/]
+    A --> G[api/]
     
     B --> B1[selenium.js]
     B --> B2[puppeteer.js]
     B --> B3[playwright.js]
+    B --> B4[run-all.js]
     
     C --> C1[index.html]
     C --> C2[admin.html]
@@ -115,12 +132,15 @@ graph LR
     C --> C5[vendor/]
     
     D --> D1[index.js]
-    D --> D2[aiScoring.js]
-    D --> D3[logger.js]
+    D --> D2[app.js]
+    D --> D3[aiScoring.js]
+    D --> D4[logger.js]
     
     E --> E1[access_log.csv]
     
     F --> F1[bot-detect/]
+
+    G --> G1["[...path].js"]
 ```
 
 ### Directory Details
@@ -128,6 +148,7 @@ graph LR
 - **`bots/`** - Automated attack scripts using popular automation frameworks
 - **`public/`** - Frontend assets including login UI, admin dashboard, and client-side detection
 - **`server/`** - Express.js backend with AI scoring, decision engine, and logging
+- **`api/`** - Serverless entrypoint for Vercel (`api/[...path].js`)
 - **`storage/`** - CSV access logs (git-ignored for privacy)
 - **`vendor/`** - Third-party libraries including bot-detect
 
@@ -208,6 +229,13 @@ const SCORE_THRESHOLD = 0.6;      // AI risk score threshold
 const CAPTCHA_THRESHOLD = 0.6;     // CAPTCHA anomaly threshold
 ```
 
+### Environment Variables
+- `ALLOW_BOT_RUN=true` to enable the Run Bot Test button and `/api/run-bots` locally.
+- `BOT_TARGET_URL` to point bot scripts at a deployed site.
+- `BOT_TIMEOUT_MS` to increase bot wait time.
+- `BOT_HEADLESS=false` to run bots in visible mode.
+- `LOG_PATH` or `LOG_DIR` to control where CSV logs are written.
+
 ### Detection Features
 The AI scoring engine analyzes:
 - **CAPTCHA Metrics**: Drag duration, mouse speed variance, corrections, reaction time
@@ -220,9 +248,12 @@ The AI scoring engine analyzes:
 Every login attempt is logged to `storage/access_log.csv` with:
 
 ```csv
-timestamp,decision,label,reason,aiScore,captchaScore,behaviorScore,automationScore,
-automationFlags,botDetectDecision,botSignalCount,trapClicked,mouseMoveCount,
-keystrokeCount,typingDurationMs,userAgent,platform,language,timezone
+timestamp,username,decision,label,reason,reasonSummary,aiScore,behaviorScore,automationScore,automationFlags,
+botDetectDecision,botSignalCount,botDetectFlags,webdriver,headlessUA,pluginsLength,languagesLength,captchaScore,
+captchaDragDurationMs,captchaMouseSpeedVariance,captchaCorrections,captchaReactionTimeMs,captchaHoneypotTriggered,
+captchaDragDistanceRatio,captchaActivationDelayMs,captchaEarlyAttempt,captchaVerifiedClient,trapClicked,
+timeToFirstClickMs,timeToSubmitMs,mouseMoveCount,keystrokeCount,typingDurationMs,typingCps,userAgent,platform,
+language,timezone
 ```
 
 **Note**: `storage/*.csv` files are git-ignored to protect user privacy.
@@ -231,7 +262,7 @@ keystrokeCount,typingDurationMs,userAgent,platform,language,timezone
 
 - **Human-Friendly Messages**: Non-technical feedback that doesn't expose detection logic
 - **Admin-Only Details**: Internal scoring and technical reasons restricted to logs
-- **Localhost Operation**: No cloud services or external API calls
+- **Local-First Operation**: No cloud services or external API calls required
 - **Minimal Fingerprinting**: Privacy-conscious data collection (UA, platform, language, timezone)
 - **No PII Storage**: Username sanitization and no personal information retention
 
@@ -251,12 +282,14 @@ Each bot script demonstrates different attack vectors:
 
 ### One-click Bot Test (Local Demo)
 From the login page, click **Run Bot Test** to launch all bot scripts against the current site and populate the admin logs.
-This button is **disabled in production** unless `ALLOW_BOT_RUN=true` is set.
+This button is hidden in production unless `ALLOW_BOT_RUN=true` is set.
+The status panel under the button shows real-time progress from the server.
 
 ## ☁️ Vercel Deployment Notes
 - API routes are handled by `api/[...path].js`, so `/api/login` and `/api/logs` work on Vercel.
 - Logs are written to `/tmp/access_log.csv` in serverless environments (ephemeral). For persistence, set `LOG_PATH` or wire to external storage.
 - The UI in `public/` is served automatically by Vercel.
+- The local bot runner (`/api/run-bots`) is disabled on Vercel by default. Run bots from your local machine using `BOT_TARGET_URL` instead.
 
 ## 🚀 Production Considerations
 
