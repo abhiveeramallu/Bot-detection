@@ -74,3 +74,4 @@ Every attempt is recorded in `storage/access_log.csv` with:
 
 ## Notes
 This is a demo project and does not ship with admin authentication. For production, add access control to `/admin.html` and `/api/logs`.
+# Bot-detection
