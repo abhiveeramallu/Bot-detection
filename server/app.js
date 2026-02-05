@@ -161,22 +161,6 @@ app.get("/api/logs", (req, res) => {
   }
 });
 
-// Audit export supports compliance review without mutating any data.
-app.get("/admin/export-logs", (req, res) => {
-  try {
-    const entries = readLogs();
-    const exportCsv = buildAuditExport(entries);
-    const fileDate = new Date().toISOString().slice(0, 10);
-    const filename = `bot-detection-audit-${fileDate}.csv`;
-
-    res.setHeader("Content-Type", "text/csv; charset=utf-8");
-    res.setHeader("Content-Disposition", `attachment; filename=\"${filename}\"`);
-    res.send(exportCsv);
-  } catch (error) {
-    console.error("Failed to export audit logs", error);
-    res.status(500).json({ message: "Export failed" });
-  }
-});
 
 app.post("/api/run-bots", (req, res) => {
   const allowBotRun = process.env.ALLOW_BOT_RUN === "true"
@@ -393,68 +377,6 @@ function summarizeAutomationFlags({ botDetectDecision, botSignalCount, automatio
   return flags;
 }
 
-function buildAuditExport(entries) {
-  const headers = [
-    "timestamp",
-    "username",
-    "finalDecision",
-    "aiScore",
-    "behaviorScore",
-    "captchaScore",
-    "automationDetected",
-    "honeypotTriggered",
-    "reasonSummary",
-    "riskLevel"
-  ];
-
-  const rows = entries.map((entry) => {
-    const aiScore = Number.parseFloat(entry.aiScore);
-    const automationDetected = inferAutomationDetected(entry);
-    const honeypotTriggered = String(entry.captchaHoneypotTriggered) === "true";
-    const riskLevel = Number.isFinite(aiScore) ? deriveRiskLevel(aiScore) : "unknown";
-
-    return [
-      entry.timestamp || "",
-      entry.username || "",
-      entry.decision || "",
-      entry.aiScore || "",
-      entry.behaviorScore || "",
-      entry.captchaScore || "",
-      automationDetected ? "true" : "false",
-      honeypotTriggered ? "true" : "false",
-      entry.reasonSummary || entry.reason || "",
-      riskLevel
-    ];
-  });
-
-  return [headers.join(","), ...rows.map((row) => row.map(escapeCsv).join(","))].join("\n");
-}
-
-function inferAutomationDetected(entry) {
-  if (entry.botDetectDecision === "bot") return true;
-  if (String(entry.trapClicked) === "true") return true;
-  if (String(entry.webdriver) === "true") return true;
-  if (String(entry.headlessUA) === "true") return true;
-  const botSignals = Number.parseInt(entry.botSignalCount, 10);
-  return Number.isFinite(botSignals) && botSignals > 0;
-}
-
-function deriveRiskLevel(score) {
-  if (score >= 0.85) return "critical";
-  if (score >= 0.7) return "high";
-  if (score >= 0.5) return "medium";
-  if (score >= 0.3) return "low";
-  return "minimal";
-}
-
-function escapeCsv(value) {
-  if (value === null || value === undefined) return "";
-  const stringValue = String(value);
-  if (stringValue.includes(",") || stringValue.includes("\n") || stringValue.includes('\"')) {
-    return `\"${stringValue.replace(/\"/g, '\"\"')}\"`;
-  }
-  return stringValue;
-}
 
 function buildBaseUrl(req) {
   const forwardedProto = req.headers["x-forwarded-proto"];
