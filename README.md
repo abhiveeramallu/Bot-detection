@@ -249,6 +249,10 @@ Each bot script demonstrates different attack vectors:
 3. Run bot scripts (should be rejected)
 4. Monitor results in admin dashboard
 
+### One-click Bot Test (Local Demo)
+From the login page, click **Run Bot Test** to launch all bot scripts against the current site and populate the admin logs.
+This button is **disabled in production** unless `ALLOW_BOT_RUN=true` is set.
+
 ## ☁️ Vercel Deployment Notes
 - API routes are handled by `api/[...path].js`, so `/api/login` and `/api/logs` work on Vercel.
 - Logs are written to `/tmp/access_log.csv` in serverless environments (ephemeral). For persistence, set `LOG_PATH` or wire to external storage.

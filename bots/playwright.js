@@ -6,15 +6,25 @@ function resolveTargetUrl() {
 
 async function run() {
   const targetUrl = resolveTargetUrl();
-  const browser = await chromium.launch({ headless: true });
+  const timeoutMs = Number(process.env.BOT_TIMEOUT_MS) || 45000;
+  const headless = process.env.BOT_HEADLESS === "false" ? false : true;
+  const browser = await chromium.launch({ headless });
   const page = await browser.newPage();
 
-  await page.goto(targetUrl, { waitUntil: "networkidle" });
+  await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: timeoutMs });
 
-  await page.waitForFunction(() => {
-    const captcha = document.getElementById("captcha");
-    return captcha && !captcha.classList.contains("captcha--inactive");
-  });
+  try {
+    await page.waitForSelector("#username", { timeout: timeoutMs });
+    await page.waitForFunction(() => {
+      const captcha = document.getElementById("captcha");
+      return captcha && !captcha.classList.contains("captcha--inactive");
+    }, { timeout: timeoutMs });
+  } catch (error) {
+    const pageUrl = page.url();
+    const title = await page.title();
+    console.error(`Page not ready for bot flow. url=${pageUrl} title=${title}`);
+    throw error;
+  }
 
   await page.waitForTimeout(400);
 

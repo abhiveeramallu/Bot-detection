@@ -84,8 +84,17 @@
             <div class="status__message" id="status-message"></div>
             <div class="status__reason" id="status-reason"></div>
           </div>
-          <div class="helper">
-            <span>Admin:</span> <a href="/admin.html">view logs</a>
+          <div class="demo-controls">
+            <button id="run-bots" class="secondary" type="button">Run Bot Test</button>
+            <div class="helper">
+              <span>Admin:</span> <a href="/admin.html">view logs</a>
+            </div>
+          </div>
+
+          <div class="bot-log" id="bot-log" aria-live="polite">
+            <div class="bot-log__title">Bot test activity</div>
+            <div class="bot-log__status" id="bot-log-status">Idle</div>
+            <div class="bot-log__lines" id="bot-log-lines"></div>
           </div>
         </div>
 
