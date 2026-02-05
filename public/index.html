@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bot Detection with AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <div class="hero__content">
+          <p class="eyebrow">Security Demo</p>
+          <h1>Bot Detection with AI</h1>
+          <p class="subtitle">
+            Privacy-friendly behavioral signals, invisible traps, and layered verification for human users.
+          </p>
+        </div>
+        <div class="card card--flat">
+          <div class="card__header">
+            <h2>Login</h2>
+            <p>Secure access with human-first verification.</p>
+          </div>
+
+          <form id="login-form" class="form" autocomplete="off">
+            <label class="field">
+              <span>Username</span>
+              <input id="username" name="username" type="text" required />
+            </label>
+
+            <label class="field">
+              <span>Password</span>
+              <input id="password" name="password" type="password" required />
+            </label>
+
+            <div class="captcha captcha--inactive" id="captcha">
+              <div class="captcha__label">Drag the slider to verify you're human</div>
+              <div class="captcha__track" id="captcha-track">
+                <div class="captcha__progress" id="captcha-progress"></div>
+                <div
+                  class="captcha__handle"
+                  id="captcha-handle"
+                  role="slider"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                  tabindex="0"
+                ></div>
+              </div>
+              <input
+                id="captcha-hp"
+                name="captcha_hp"
+                class="captcha-hp"
+                type="text"
+                tabindex="-1"
+                autocomplete="off"
+                aria-hidden="true"
+              />
+              <div class="captcha__status" id="captcha-status">Preparing verification...</div>
+            </div>
+
+            <button id="login-btn" class="primary" type="submit">Sign in</button>
+
+            <!-- Bot trap: invisible submit button -->
+            <button
+              id="trap-btn"
+              class="trap"
+              type="submit"
+              tabindex="-1"
+              aria-hidden="true"
+              data-trap="true"
+            >
+              Verify
+            </button>
+          </form>
+
+          <div class="status" id="status" aria-live="polite">
+            <div class="status__message" id="status-message"></div>
+            <div class="status__reason" id="status-reason"></div>
+          </div>
+          <div class="helper">
+            <span>Admin:</span> <a href="/admin.html">view logs</a>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <script src="vendor/botdetect.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

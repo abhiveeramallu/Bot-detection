@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Access Logs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="card card--flat admin">
+        <div class="card__header">
+          <h2>Access Logs</h2>
+          <p>Admin-only view of verification attempts on localhost.</p>
+        </div>
+
+        <div class="dashboard">
+          <div class="stat-card">
+            <div class="stat-label">Accepted</div>
+            <div class="stat-value" id="accepted-count">0</div>
+            <div class="stat-sub" id="accepted-rate">0%</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Rejected</div>
+            <div class="stat-value" id="rejected-count">0</div>
+            <div class="stat-sub" id="rejected-rate">0%</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Attempts</div>
+            <div class="stat-value" id="total-count">0</div>
+            <div class="stat-sub" id="total-range">All time</div>
+          </div>
+        </div>
+
+        <div class="stat-bar" aria-hidden="true">
+          <span class="stat-bar__accepted" id="accepted-bar"></span>
+          <span class="stat-bar__rejected" id="rejected-bar"></span>
+        </div>
+
+        <div class="stats" id="stats"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Username</th>
+                <th>Decision</th>
+                <th>Reason Summary</th>
+                <th>AI Score</th>
+                <th>Behavior Score</th>
+                <th>CAPTCHA Score</th>
+                <th>Automation Flags</th>
+              </tr>
+            </thead>
+            <tbody id="log-body"></tbody>
+          </table>
+        </div>
+
+        <div class="helper">
+          <a href="/">Back to login</a>
+        </div>
+      </section>
+    </main>
+
+    <script src="admin.js"></script>
+  </body>
+</html>
