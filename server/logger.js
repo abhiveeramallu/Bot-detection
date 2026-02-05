@@ -1,7 +1,9 @@
 const fs = require("fs");
 const path = require("path");
 
-const LOG_PATH = path.join(__dirname, "..", "storage", "access_log.csv");
+const LOG_DIR = process.env.LOG_DIR
+  || (process.env.VERCEL ? "/tmp" : path.join(__dirname, "..", "storage"));
+const LOG_PATH = process.env.LOG_PATH || path.join(LOG_DIR, "access_log.csv");
 
 const HEADERS = [
   "timestamp",
@@ -45,6 +47,7 @@ const HEADERS = [
 ];
 
 function ensureLogFile() {
+  fs.mkdirSync(path.dirname(LOG_PATH), { recursive: true });
   if (!fs.existsSync(LOG_PATH)) {
     fs.writeFileSync(LOG_PATH, `${HEADERS.join(",")}\n`, "utf8");
     return;
