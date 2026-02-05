@@ -34,42 +34,9 @@ async function run() {
 
     await driver.sleep(400);
 
-    await driver.executeScript(() => {
-      const handle = document.getElementById("captcha-handle");
-      const track = document.getElementById("captcha-track");
-      if (!handle || !track) return;
-
-      track.scrollIntoView({ block: "center", inline: "center" });
-      const rect = track.getBoundingClientRect();
-      const startX = rect.left + 12;
-      const endX = rect.right - 12;
-      const y = rect.top + rect.height / 2;
-      const steps = 12;
-
-      const usePointer = typeof PointerEvent !== "undefined";
-
-      const dispatch = (type, x, y, target) => {
-        const options = {
-          bubbles: true,
-          clientX: x,
-          clientY: y,
-          pointerId: 1,
-          pointerType: "mouse",
-          isPrimary: true
-        };
-        const event = usePointer
-          ? new PointerEvent(type, options)
-          : new MouseEvent(type.replace("pointer", "mouse"), options);
-        (target || document).dispatchEvent(event);
-      };
-
-      dispatch("pointerdown", startX, y, handle);
-      for (let i = 1; i <= steps; i += 1) {
-        const nextX = startX + ((endX - startX) * i) / steps;
-        dispatch("pointermove", nextX, y, document);
-      }
-      dispatch("pointerup", endX, y, document);
-    });
+    const prompt = await driver.findElement(By.id("captcha-prompt")).getText();
+    const answer = solveCaptchaPrompt(prompt);
+    await driver.findElement(By.id("captcha-answer")).sendKeys(answer);
 
     await driver.findElement(By.id("username")).sendKeys("selenium_bot");
     await driver.findElement(By.id("password")).sendKeys("password123");
@@ -86,6 +53,20 @@ async function run() {
   } finally {
     await driver.quit();
   }
+}
+
+function solveCaptchaPrompt(prompt) {
+  const text = String(prompt || "").trim();
+  const mathMatch = text.match(/What is\\s+(\\d+)\\s*\\+\\s*(\\d+)\\?/i);
+  if (mathMatch) {
+    return String(Number(mathMatch[1]) + Number(mathMatch[2]));
+  }
+  const colonIndex = text.indexOf(":");
+  if (colonIndex >= 0) {
+    return text.slice(colonIndex + 1).trim();
+  }
+  const parts = text.split(" ");
+  return parts[parts.length - 1] || "";
 }
 
 run().catch((error) => {

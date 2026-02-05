@@ -40,19 +40,15 @@
             </label>
 
             <div class="captcha captcha--inactive" id="captcha">
-              <div class="captcha__label">Drag the slider to verify you're human</div>
-              <div class="captcha__track" id="captcha-track">
-                <div class="captcha__progress" id="captcha-progress"></div>
-                <div
-                  class="captcha__handle"
-                  id="captcha-handle"
-                  role="slider"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                  aria-valuenow="0"
-                  tabindex="0"
-                ></div>
+              <div class="captcha__label">Complete the verification to continue</div>
+              <div class="captcha__challenge">
+                <div class="captcha__prompt" id="captcha-prompt">Loading verification...</div>
+                <button class="captcha__refresh" id="captcha-refresh" type="button">New challenge</button>
               </div>
+              <label class="captcha__input">
+                <span>Your answer</span>
+                <input id="captcha-answer" name="captcha_answer" type="text" autocomplete="off" />
+              </label>
               <input
                 id="captcha-hp"
                 name="captcha_hp"
@@ -84,17 +80,8 @@
             <div class="status__message" id="status-message"></div>
             <div class="status__reason" id="status-reason"></div>
           </div>
-          <div class="demo-controls">
-            <button id="run-bots" class="secondary" type="button">Run Bot Test</button>
-            <div class="helper">
-              <span>Admin:</span> <a href="/admin.html">view logs</a>
-            </div>
-          </div>
-
-          <div class="bot-log" id="bot-log" aria-live="polite">
-            <div class="bot-log__title">Bot test activity</div>
-            <div class="bot-log__status" id="bot-log-status">Idle</div>
-            <div class="bot-log__lines" id="bot-log-lines"></div>
+          <div class="helper">
+            <span>Admin:</span> <a href="/admin.html">view logs</a>
           </div>
         </div>
 
